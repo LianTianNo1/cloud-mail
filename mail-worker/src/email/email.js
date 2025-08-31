@@ -17,11 +17,8 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 export async function email(message, env, ctx) {
-	console.log('=== 邮件处理函数开始 ===');
 
 	try {
-		console.log('步骤1: 开始查询设置');
-		console.log("看看-env:", env);
 
 		const {
 			receive,
@@ -36,56 +33,31 @@ export async function email(message, env, ctx) {
 			noRecipient
 		} = await settingService.query({ env });
 
-		console.log('步骤1: 设置查询完成');
-
 		if (receive === settingConst.receive.CLOSE) {
-			console.log('邮件接收已关闭，退出处理');
 			return;
 		}
 
-		console.log('步骤2: 开始读取邮件原始数据');
+		const reader = message.raw.getReader();
+		let content = '';
 
-		let reader, content = '';
-
-		try {
-			reader = message.raw.getReader();
-			console.log('步骤2a: 获取 reader 成功');
-		} catch (e) {
-			console.error('步骤2a: 获取 reader 失败:', e);
-			throw e;
+		while (true) {
+			const { done, value } = await reader.read();
+			if (done) break;
+			content += new TextDecoder().decode(value);
 		}
 
-		try {
-			while (true) {
-				const { done, value } = await reader.read();
-				if (done) break;
-				content += new TextDecoder().decode(value);
-			}
-			console.log('步骤2b: 读取邮件内容完成，长度:', content.length);
-		} catch (e) {
-			console.error('步骤2b: 读取邮件内容失败:', e);
-			throw e;
-		}
-
-		console.log('步骤3: 开始解析邮件');
-
-		let email;
-		try {
-			email = await PostalMime.parse(content);
-			console.log('步骤3: 邮件解析成功');
-		} catch (e) {
-			console.error('步骤3: 邮件解析失败:', e);
-			throw e;
-		}
+		const email = await PostalMime.parse(content);
 
 		// 支持从 Google Workspace 转发的邮件处理
 		// 处理子域名转发的情况
 		let realRecipient = message.to;
 		console.log('看看-email:', JSON.stringify(email));
 
-		console.log('收到邮件 - 原始收件人:', message.to);
+
+		console.log('Worker 接收地址:', message.to);
 		console.log('发件人:', email.from?.address);
 		console.log('主题:', email.subject);
+		console.log('邮件解析后的收件人:', email.to);
 
 		// 检查是否是从子域名转发的邮件
 		const forwardDomain = env.FORWARD_DOMAIN; // 例如: worker.apu.edu.kg
@@ -99,51 +71,43 @@ export async function email(message, env, ctx) {
 		if (forwardDomain && message.to.includes(forwardDomain)) {
 			console.log('检测到子域名转发邮件，转发域名:', forwardDomain);
 
-			// 方法1: 从邮件头中提取原始收件人信息
-			const headers = email.headers || {};
-			console.log('邮件头类型:', typeof headers);
-			console.log('邮件头内容:', headers);
+			// 方法1: 从解析后的邮件 to 字段中获取真实收件人
+			if (email.to && email.to.length > 0 && email.to[0].address) {
+				realRecipient = email.to[0].address;
+				console.log('从邮件 to 字段找到真实收件人:', realRecipient);
+			} else {
+				// 方法2: 从邮件头中查找 to 字段
+				const headers = email.headers || [];
+				console.log('邮件头类型:', typeof headers);
+				console.log('邮件头数量:', Array.isArray(headers) ? headers.length : 'not array');
 
-			let originalTo = null;
+				let headerTo = null;
 
-			// 安全地读取邮件头
-			try {
-				if (headers && typeof headers === 'object') {
-					// 如果 headers 是 Map 对象
-					if (typeof headers.get === 'function') {
-						originalTo = headers.get('x-original-to') ||
-									 headers.get('delivered-to') ||
-									 headers.get('x-forwarded-to') ||
-									 headers.get('x-forwarded-for');
-					} else {
-						// 如果 headers 是普通对象
-						originalTo = headers['x-original-to'] ||
-									 headers['delivered-to'] ||
-									 headers['x-forwarded-to'] ||
-									 headers['x-forwarded-for'];
+				// 从邮件头数组中查找 to 字段
+				if (Array.isArray(headers)) {
+					const toHeader = headers.find(header => header.key === 'to');
+					if (toHeader) {
+						headerTo = toHeader.value;
+						console.log('从邮件头找到 to 字段:', headerTo);
 					}
 				}
-			} catch (e) {
-				console.error('读取邮件头失败:', e);
-			}
 
-			if (originalTo) {
-				realRecipient = originalTo;
-				console.log('从邮件头找到原始收件人:', realRecipient);
-			} else {
-				// 方法2: 如果邮件头中没有原始收件人信息，使用映射规���
-
-				// 检查是否有特定的邮箱映射配置
-				if (env.REAL_EMAIL) {
-					// 使用固定映射：任何发到转发域名的邮件都映射到指定邮箱
-					realRecipient = env.REAL_EMAIL;
-					console.log('使用固定映射规则，真实收件人:', realRecipient);
-				} else if (targetDomain) {
-					// 通用规则：将转发域名替换为目标域名
-					realRecipient = message.to.replace(forwardDomain, targetDomain);
-					console.log('使用域名替换规则，真实收件人:', realRecipient);
+				if (headerTo) {
+					realRecipient = headerTo;
+					console.log('使用邮件头中的收件人:', realRecipient);
 				} else {
-					console.log('未配置映射规则，使用原始收件人');
+					// 方法3: 使用映射规则
+					if (env.REAL_EMAIL) {
+						// 使用固定映射：任何发到转发域名的邮件都映射到指定邮箱
+						realRecipient = env.REAL_EMAIL;
+						console.log('使用固定映射规则，真实收件人:', realRecipient);
+					} else if (targetDomain) {
+						// 通用规则：将转发域名替换为目标域名
+						realRecipient = message.to.replace(forwardDomain, targetDomain);
+						console.log('使用域名替换规则，真实收件人:', realRecipient);
+					} else {
+						console.log('未配置映射规则，使用原始收件人');
+					}
 				}
 			}
 		}
@@ -277,7 +241,7 @@ export async function email(message, env, ctx) {
 			const tgMessage = `<b>${params.subject}</b>
 
 <b>发件人：</b>${params.name}		&lt;${params.sendEmail}&gt;
-<b>收件人：\u200B</b>${message.to}
+<b>收件人：\u200B</b>${realRecipient}
 <b>时间：</b>${dayjs.utc(emailRow.createTime).tz('Asia/Shanghai').format('YYYY-MM-DD HH:mm')}
 
 ${params.text || emailUtils.htmlToText(params.content) || ''}
