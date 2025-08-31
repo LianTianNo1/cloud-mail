@@ -49,7 +49,56 @@ export async function email(message, env, ctx) {
 
 		const email = await PostalMime.parse(content);
 
-		const account = await accountService.selectByEmailIncludeDel({ env: env }, message.to);
+		// 支持从 Google Workspace 转发的邮件处理
+		// 处理子域名转发的情况
+		let realRecipient = message.to;
+		
+		console.log('收到邮件 - 原始收件人:', message.to);
+		console.log('发件人:', email.from?.address);
+		console.log('主题:', email.subject);
+		
+		// 检查是否是从子域名 worker.apu.edu.kg 转发的邮件
+		if (message.to.includes('worker.apu.edu.kg')) {
+			console.log('检测到子域名转发邮件');
+			
+			// 方法1: 从邮件头中提取原始收件人信息
+			const headers = email.headers || {};
+			const originalTo = headers['x-original-to'] || 
+							   headers['delivered-to'] || 
+							   headers['x-forwarded-to'] ||
+							   headers['x-forwarded-for'];
+			
+			if (originalTo) {
+				realRecipient = originalTo;
+				console.log('从邮件头找到原始收件人:', realRecipient);
+			} else {
+				// 方法2: 如果邮件头中没有原始收件人信息，使用映射规则
+				// forward-target@worker.apu.edu.kg -> 对应的真实邮箱
+				
+				// 这里需要根据你的实际邮箱配置来映射
+				// 例如：forward-target@worker.apu.edu.kg -> langtian@apu.edu.kg
+				if (message.to === 'forward-target@worker.apu.edu.kg') {
+					// 你需要在这里指定对应的真实邮箱地址
+					// 可以从环境变量中读取，或者硬编码
+					realRecipient = env.REAL_EMAIL || 'langtian@apu.edu.kg';
+					console.log('使用映射规则，真实收件人:', realRecipient);
+				} else {
+					// 通用规则：将 worker.apu.edu.kg 替换为 apu.edu.kg
+					realRecipient = message.to.replace('worker.apu.edu.kg', 'apu.edu.kg');
+					console.log('使用通用映射规则，真实收件人:', realRecipient);
+				}
+			}
+		}
+
+		console.log('最终确定的收件人:', realRecipient);
+
+		const account = await accountService.selectByEmailIncludeDel({ env: env }, realRecipient);
+		
+		if (account) {
+			console.log('找到对应账户:', account.email);
+		} else {
+			console.log('未找到对应账户，收件人:', realRecipient);
+		}
 
 		if (!account && noRecipient === settingConst.noRecipient.CLOSE) {
 			return;
@@ -104,10 +153,10 @@ export async function email(message, env, ctx) {
 
 		}
 
-		const toName = email.to.find(item => item.address === message.to)?.name || '';
+		const toName = email.to.find(item => item.address === realRecipient)?.name || '';
 
 		const params = {
-			toEmail: message.to,
+			toEmail: realRecipient,
 			toName: toName,
 			sendEmail: email.from.address,
 			name: email.from.name || emailUtils.getName(email.from.address),
