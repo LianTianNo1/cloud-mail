@@ -1,0 +1,1 @@
+import{d as n}from"./iconify-DfAVPzXa.js";import{bt as l}from"./index-CrVLGAV5.js";var g="Expected a function";function u(e,a,r){var i=!0,t=!0;if(typeof e!="function")throw new TypeError(g);return l(r)&&(i="leading"in r?!!r.leading:i,t="trailing"in r?!!r.trailing:t),n(e,a,{leading:i,maxWait:a,trailing:t})}export{u as t};

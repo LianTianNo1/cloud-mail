@@ -1,16 +1,10 @@
 <template>
-  <div style="padding: 0 15px;cursor: pointer" @click="toggleClick">
-    <svg
-      :class="{'is-active':isActive}"
-      class="hamburger"
-      viewBox="0 0 1024 1024"
-      xmlns="http://www.w3.org/2000/svg"
-      width="64"
-      height="64"
-      fill="currentColor"
-    >
-      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM142.4 642.1L298.7 519a8.84 8.84 0 0 0 0-13.9L142.4 381.9c-5.8-4.6-14.4-.5-14.4 6.9v246.3a8.9 8.9 0 0 0 14.4 7z" />
-    </svg>
+  <div class="premium-hamburger" @click="toggleClick" :class="{ 'is-active': isActive }">
+    <div class="hamburger-lines">
+      <span class="line line-1"></span>
+      <span class="line line-2"></span>
+      <span class="line line-3"></span>
+    </div>
   </div>
 </template>
 
@@ -29,14 +23,61 @@ const toggleClick = () => {
 </script>
 
 <style scoped>
-.hamburger {
-  display: inline-block;
-  vertical-align: middle;
-  width: 20px;
-  height: 20px;
+.premium-hamburger {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(0, 0, 0, 0.04);
+  
+  &:hover {
+    background: rgba(102, 126, 234, 0.1);
+    transform: translateY(-1px);
+  }
+  
+  &.is-active {
+    .line-1 {
+      transform: rotate(45deg) translate(5px, 5px);
+    }
+    
+    .line-2 {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    
+    .line-3 {
+      transform: rotate(-45deg) translate(7px, -6px);
+    }
+  }
 }
 
-.hamburger.is-active {
-  transform: rotate(180deg);
+.hamburger-lines {
+  width: 20px;
+  height: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+}
+
+.line {
+  width: 100%;
+  height: 2px;
+  background: var(--el-text-color-primary);
+  border-radius: 2px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
+}
+
+.line-1 {
+  transform-origin: top left;
+}
+
+.line-3 {
+  transform-origin: bottom left;
 }
 </style>

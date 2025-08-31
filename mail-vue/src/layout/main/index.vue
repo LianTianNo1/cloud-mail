@@ -164,7 +164,11 @@ const handleResize = () => {
 
 
 .main-view {
-  background: var(--el-bg-color);
+  background: transparent;
+  position: relative;
+  z-index: 1;
+  padding: 24px;
+  min-height: calc(100vh - 80px);
 }
 
 

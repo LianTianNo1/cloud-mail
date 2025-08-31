@@ -23,4 +23,3 @@ mail-vue/node_modules
 mail-vue/dist
 .wrangler
 .venv
-mail-worker/dist

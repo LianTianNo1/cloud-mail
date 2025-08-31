@@ -1,18 +1,36 @@
 <template>
   <div id="login-box">
-    <div id="background-wrap" v-if="!settingStore.settings.background">
-      <div class="x1 cloud"></div>
-      <div class="x2 cloud"></div>
-      <div class="x3 cloud"></div>
-      <div class="x4 cloud"></div>
-      <div class="x5 cloud"></div>
+    <!-- Premium animated background -->
+    <div class="premium-background">
+      <div class="gradient-orb orb-1"></div>
+      <div class="gradient-orb orb-2"></div>
+      <div class="gradient-orb orb-3"></div>
+      <div class="floating-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+        <div class="shape shape-4"></div>
+        <div class="shape shape-5"></div>
+        <div class="shape shape-6"></div>
+      </div>
+      <div class="mesh-gradient"></div>
     </div>
-    <div v-else :style="background"></div>
+    
+    <!-- Custom background if set -->
+    <div v-if="settingStore.settings.background" :style="background" class="custom-background"></div>
+    
     <div class="form-wrapper">
       <div class="container">
-        <span class="form-title">{{ settingStore.settings.title }}</span>
-        <span class="form-desc" v-if="show === 'login'">{{ $t('loginTitle') }}</span>
-        <span class="form-desc" v-else>{{ $t('regTitle') }}</span>
+        <div class="brand-section">
+          <div class="brand-icon">
+            <Icon icon="fluent:mail-24-filled" width="32" height="32" />
+          </div>
+          <div class="brand-content">
+            <h1 class="brand-title">{{ settingStore.settings.title }}</h1>
+            <p class="brand-subtitle" v-if="show === 'login'">{{ $t('loginTitle') }}</p>
+            <p class="brand-subtitle" v-else>{{ $t('regTitle') }}</p>
+          </div>
+        </div>
         <div v-show="show === 'login'">
           <el-input :class="settingStore.settings.loginDomain === 0 ? 'email-input' : ''" v-model="form.email"
                     type="text" :placeholder="$t('emailAccount')" autocomplete="off">
@@ -402,22 +420,29 @@ function submitRegister() {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 50%;
+  @media (max-width: 1024px) {
+    width: 60%;
+  }
   @media (max-width: 767px) {
     width: 100%;
+    left: 0;
   }
 }
 
 .container {
-  background: v-bind(loginOpacity);
-  padding-left: 40px;
-  padding-right: 40px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  padding: 48px 40px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  width: 450px;
+  width: 480px;
   height: 100%;
-  border-left: 1px solid var(--login-border);
-  box-shadow: var(--el-box-shadow-light);
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
   @media (max-width: 1024px) {
     padding: 20px 18px;
     width: 384px;
@@ -433,10 +458,59 @@ function submitRegister() {
     margin-left: 18px;
   }
 
+  .brand-section {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 40px;
+    
+    .brand-icon {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+    
+    .brand-content {
+      flex: 1;
+      
+      .brand-title {
+        font-size: 28px;
+        font-weight: 800;
+        color: var(--el-text-color-primary);
+        margin: 0 0 4px 0;
+        line-height: 1.2;
+      }
+      
+      .brand-subtitle {
+        font-size: 16px;
+        color: var(--el-text-color-secondary);
+        margin: 0;
+        font-weight: 500;
+      }
+    }
+  }
+
   .btn {
-    height: 36px;
+    height: 48px;
     width: 100%;
-    border-radius: 6px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+    }
   }
 
   .form-desc {
@@ -461,22 +535,44 @@ function submitRegister() {
   }
 
   :deep(.el-input__wrapper) {
-    border-radius: 6px;
-    background: var(--el-bg-color);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    &:hover {
+      border-color: rgba(102, 126, 234, 0.3);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    &.is-focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1), 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
   }
 
   .email-input :deep(.el-input__wrapper) {
-    border-radius: 6px 0 0 6px;
-    background: var(--el-bg-color);
+    border-radius: 12px 0 0 12px;
+    background: rgba(255, 255, 255, 0.9);
   }
 
   .el-input {
-    height: 38px;
+    height: 52px;
     width: 100%;
-    margin-bottom: 18px;
+    margin-bottom: 24px;
 
     :deep(.el-input__inner) {
-      height: 36px;
+      height: 50px;
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--el-text-color-primary);
+      
+      &::placeholder {
+        color: var(--el-text-color-placeholder);
+        font-weight: 400;
+      }
     }
   }
 }
@@ -521,14 +617,14 @@ function submitRegister() {
 
 
 #login-box {
-  background: linear-gradient(to bottom, #2980b9, #6dd5fa, #fff);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   font: 100% Arial, sans-serif;
   height: 100%;
   margin: 0;
   padding: 0;
-  overflow-x: hidden;
-  display: grid;
-  grid-template-columns: 1fr;
+  overflow: hidden;
+  display: flex;
+  position: relative;
 }
 
 
@@ -603,6 +699,168 @@ function submitRegister() {
   width: 180px;
   right: 50px;
   top: -90px;
+}
+
+/* Premium Background Animations */
+.premium-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.gradient-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  opacity: 0.7;
+  animation: float 6s ease-in-out infinite;
+}
+
+.orb-1 {
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(102, 126, 234, 0.4) 0%, transparent 70%);
+  top: 10%;
+  left: 10%;
+  animation-delay: 0s;
+}
+
+.orb-2 {
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(118, 75, 162, 0.4) 0%, transparent 70%);
+  top: 60%;
+  right: 20%;
+  animation-delay: 2s;
+}
+
+.orb-3 {
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(79, 172, 254, 0.3) 0%, transparent 70%);
+  bottom: 20%;
+  left: 30%;
+  animation-delay: 4s;
+}
+
+.floating-shapes {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.shape {
+  position: absolute;
+  opacity: 0.1;
+  animation: drift 20s linear infinite;
+}
+
+.shape-1 {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  border-radius: 50%;
+  top: 20%;
+  left: 15%;
+  animation-delay: 0s;
+}
+
+.shape-2 {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(45deg, #f093fb, #f5576c);
+  border-radius: 20%;
+  top: 70%;
+  left: 80%;
+  animation-delay: 5s;
+}
+
+.shape-3 {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(45deg, #4facfe, #00f2fe);
+  border-radius: 30%;
+  top: 40%;
+  right: 10%;
+  animation-delay: 10s;
+}
+
+.shape-4 {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(45deg, #43e97b, #38f9d7);
+  border-radius: 50%;
+  bottom: 30%;
+  left: 60%;
+  animation-delay: 15s;
+}
+
+.shape-5 {
+  width: 35px;
+  height: 35px;
+  background: linear-gradient(45deg, #fa709a, #fee140);
+  border-radius: 40%;
+  top: 10%;
+  right: 30%;
+  animation-delay: 7s;
+}
+
+.shape-6 {
+  width: 70px;
+  height: 70px;
+  background: linear-gradient(45deg, #a8edea, #fed6e3);
+  border-radius: 25%;
+  bottom: 10%;
+  right: 50%;
+  animation-delay: 12s;
+}
+
+.mesh-gradient {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(at 40% 20%, hsla(28,100%,74%,0.1) 0px, transparent 50%),
+    radial-gradient(at 80% 0%, hsla(189,100%,56%,0.1) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, hsla(355,100%,93%,0.1) 0px, transparent 50%),
+    radial-gradient(at 80% 50%, hsla(340,100%,76%,0.1) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, hsla(22,100%,77%,0.1) 0px, transparent 50%),
+    radial-gradient(at 80% 100%, hsla(242,100%,70%,0.1) 0px, transparent 50%),
+    radial-gradient(at 0% 0%, hsla(343,100%,76%,0.1) 0px, transparent 50%);
+  animation: meshMove 15s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(180deg);
+  }
+}
+
+@keyframes drift {
+  0% {
+    transform: translateX(-100px) translateY(0px) rotate(0deg);
+  }
+  100% {
+    transform: translateX(calc(100vw + 100px)) translateY(-100px) rotate(360deg);
+  }
+}
+
+@keyframes meshMove {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.1) rotate(5deg);
+  }
 }
 
 </style>
