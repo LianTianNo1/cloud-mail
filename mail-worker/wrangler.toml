@@ -34,4 +34,8 @@ crons = ["0 16 * * *"]	#定时任务每天晚上12点执行
 #domain = []				#邮件域名可配置多个 示例: ["example1.com","example2.com"]
 #admin = ""				#管理员的邮箱	示例: admin@example.com
 #jwt_secret = ""			#jwt令牌的密钥,随便填一串字符串
-#REAL_EMAIL = "langtian@apu.edu.kg"  #子域名转发对应的真实邮箱地址
+
+# 子域名转发配置
+#FORWARD_DOMAIN = ""  #接收邮件的子域名
+#TARGET_DOMAIN = ""          #目标域名（你的真实邮箱域名）
+#REAL_EMAIL = ""    #固定映射的真实邮箱地址（可选，优先级高于域名替换）
